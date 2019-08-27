@@ -1,9 +1,11 @@
-package io.clonalejandro;
+package io.clonalejandro.PacketListener;
 
-import io.clonalejandro.utils.PacketInjector;
+import io.clonalejandro.PacketListener.utils.PacketInjector;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
-import me.clonalejandro.ReflectionAPI.ReflectionAPI;
+import io.netty.channel.ChannelPromise;
+
 import org.bukkit.entity.Player;
 
 /**
@@ -27,18 +29,25 @@ public abstract class PacketListener extends PacketInjector {
 
     /** SMALL CONSTRUCTORS **/
 
-    public PacketListener(Player player) throws Exception {
+    public PacketListener(Player player){
         super(PacketListener.pipeline(player), PacketListener.channel(player));
     }
 
-    public abstract void actionInjector();
+    public abstract void actionInjectorOnRead(ChannelHandlerContext context, Object packet);
+    public abstract void actionInjectorOnWrite(ChannelHandlerContext context, Object packet, ChannelPromise promise);
 
 
     /** REST **/
 
     @Override
-    public void aI(){
-        actionInjector();
+    public void aIOnRead(ChannelHandlerContext context, Object packet){
+        actionInjectorOnRead(context, packet);
+    }
+
+
+    @Override
+    public void aIOnWrite(ChannelHandlerContext context, Object packet, ChannelPromise promise){
+        actionInjectorOnWrite(context, packet, promise);
     }
 
 
@@ -48,9 +57,8 @@ public abstract class PacketListener extends PacketInjector {
      * This method define and return a pipeline
      * @param player
      * @return
-     * @throws Exception
      */
-    private static ChannelPipeline pipeline(Player player) throws Exception{
+    private static ChannelPipeline pipeline(Player player){
         try {
             final Class<?> playerClazz = player.getClass();
             final Object handle = playerClazz.getMethod("getHandle").invoke(player),
@@ -59,7 +67,8 @@ public abstract class PacketListener extends PacketInjector {
                          channel = networkManager.getClass().getDeclaredField("channel").get(networkManager);
 
             return (ChannelPipeline) channel.getClass().getDeclaredMethod("pipeline").invoke(channel);
-        } catch (Exception ex){
+        }
+        catch (Exception ex){
             ex.printStackTrace();
             return null;
         }
@@ -70,9 +79,8 @@ public abstract class PacketListener extends PacketInjector {
      * This method define and return a Channel
      * @param player
      * @return
-     * @throws Exception
      */
-    private static Channel channel(Player player) throws Exception{
+    private static Channel channel(Player player){
         try {
             final Class<?> playerClazz = player.getClass();
             final Object handle = playerClazz.getMethod("getHandle").invoke(player),
@@ -80,7 +88,8 @@ public abstract class PacketListener extends PacketInjector {
                          networkManager = playerConnection.getClass().getField("networkManager").get(playerConnection);
 
             return (Channel) networkManager.getClass().getDeclaredField("channel").get(networkManager);
-        } catch (Exception ex){
+        }
+        catch (Exception ex){
             ex.printStackTrace();
             return null;
         }

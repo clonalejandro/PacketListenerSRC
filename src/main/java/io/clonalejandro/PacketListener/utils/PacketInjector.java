@@ -1,4 +1,4 @@
-package io.clonalejandro.utils;
+package io.clonalejandro.PacketListener.utils;
 
 import io.netty.channel.*;
 
@@ -37,8 +37,8 @@ public abstract class PacketInjector {
         this.channel = channel;
     }
 
-    public abstract void aI();
-
+    public abstract void aIOnRead(ChannelHandlerContext context, Object packet);
+    public abstract void aIOnWrite(ChannelHandlerContext context, Object packet, ChannelPromise promise);
 
     /** REST **/
 
@@ -49,7 +49,7 @@ public abstract class PacketInjector {
             public void channelRead(ChannelHandlerContext context, Object packet) throws Exception{
                 if (debug)
                     Bukkit.getConsoleSender().sendMessage(translator("&b&lPacketListener> &f" + packet.toString()));
-
+                aIOnRead(context, packet);
                 super.channelRead(context, packet);
             }
 
@@ -58,7 +58,7 @@ public abstract class PacketInjector {
             public void write(ChannelHandlerContext context, Object packet, ChannelPromise promise) throws Exception{
                 if (debug)
                     Bukkit.getConsoleSender().sendMessage(translator("&b&lPacketListener> &e" + packet.toString()));
-                aI();
+                aIOnWrite(context, packet, promise);
                 super.write(context, packet, promise);
             }
 
